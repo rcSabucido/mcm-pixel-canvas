@@ -22,7 +22,7 @@ def menu():
     menu_label.set_text("ENTER DESIRED GRID DIMENSION")
                                                                            
     CLOCK = pygame.time.Clock()
-    TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((300, 350),
+    TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((300, 340),
                                                                            (200, 50)), manager=MANAGER,
                                                                            object_id="#main_text_entry")
     
@@ -51,9 +51,9 @@ def menu():
 
 
 # specifies the grid dimension of the canvas
-def actual_canvas(text):
-    number_of_rows = int(text)
-    number_of_columns = int(text)
+def actual_canvas(dimension):
+    number_of_rows = int(dimension)
+    number_of_columns = int(dimension)
     grid = [[0 for x in range(number_of_rows)] for y in range(number_of_columns)]
 
     # calculates the specific dimensions of the individual cells
@@ -76,6 +76,8 @@ def actual_canvas(text):
                                                          i * basic_y, basic_x, basic_y))
                     
     def change_color(screen, color, x_cell, y_cell, x_pos, y_pos):
+        # x_cell * x_pos gives pixel position of left edge of cell
+        # y_cell * y_pos gives pixel position of top edge of cell
         pygame.draw.rect(screen, color, (x_cell * x_pos, y_cell * y_pos, x_pos,
                                          y_pos))
     while running:
@@ -87,11 +89,13 @@ def actual_canvas(text):
                     erase_screen(screen, grid, basic_x, basic_y)
                     pygame.display.flip()
                 if event.key == K_r:
-                    colors = "#E07A5F"
+                    colors = "#93032E"
                 if event.key == K_g:
                     colors = "#81B29A"
                 if event.key == K_b:
-                    colors = "#3D405B"
+                    colors = "#59A5D8"
+                if event.key == K_v:
+                    colors = "#000000"
             elif event.type == QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN or clicking:
@@ -101,8 +105,6 @@ def actual_canvas(text):
                 y_in_grid = int(y/ basic_y)
                 grid[y_in_grid][x_in_grid] = 1
 
-                # x_in_grid * basic_x gives pixel position of left edge of cell
-                # y_in_grid * basic_y gives pixel position of top edge of cell
                 change_color(screen, colors, x_in_grid, y_in_grid, basic_x, basic_y)        
                 
                 pygame.display.flip()                
