@@ -5,11 +5,12 @@ from pygame.locals import *
 
 pygame.init()
 
-
+# Dimension of pygame window
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("PixelCanvas")
 
 MANAGER = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT), 'json_files/theme.json')
 MANAGER.get_theme().load_theme('json_files/label_theme.json')
@@ -18,8 +19,23 @@ user_text = ""
 
 def menu():
     global user_text
-    menu_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((250, 200), (300, 200)), text= "", manager=MANAGER)                                     
+    menu_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((250, 200), (300, 200)), text="", manager=MANAGER)                                     
     menu_label.set_text("ENTER DESIRED GRID DIMENSION")
+    menu_label.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR)
+    control_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((350, 360), (100, 100)), text="", manager=MANAGER)
+    control_label.set_text("CONTROLS:")
+    e_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((300, 390), (200, 100)), text="E = ERASE CANVAS", manager=MANAGER)
+    r_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((314, 410), (100, 100)), text="R = RED", manager=MANAGER)
+    g_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((322, 430), (100, 100)), text="G = GREEN", manager=MANAGER)
+    b_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((318, 450), (100, 100)), text="B = BLUE", manager=MANAGER)
+    v_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((322, 470), (100, 100)), text="V = BLACK", manager=MANAGER)
+    c_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((326, 490), (100, 100)), text="C = ERASER", manager=MANAGER)
+    esc_label = pygame_gui.elements.UILabel(relative_rect=pygame.Rect((254, 510), (300, 100)), text="ESC = QUIT CANVAS", manager=MANAGER)
+
+    control_list = [control_label, e_label, r_label, g_label, b_label, v_label, c_label, esc_label]
+    for ctr in control_list:
+        ctr.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR)
+
                                                                            
     CLOCK = pygame.time.Clock()
     TEXT_INPUT = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((300, 340),
@@ -30,12 +46,16 @@ def menu():
     while True:
         UI_REFRESH_RATE = CLOCK.tick(60)/1000
         for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED and event.ui_object_id == "#main_text_entry":
                 user_text = TEXT_INPUT.get_text()
-                actual_canvas(user_text)
+                create_canvas(user_text)
 
                 
                 
@@ -50,10 +70,12 @@ def menu():
         pygame.display.update()
 
 
-# specifies the grid dimension of the canvas
-def actual_canvas(dimension):
+def create_canvas(dimension):
+    # specifies the grid dimension of the canvas
     number_of_rows = int(dimension)
     number_of_columns = int(dimension)
+    # creates an x/y array of 0 values based on the number of rows and columns
+    # this sets the dead cells for activation when user wants to erase canvas
     grid = [[0 for x in range(number_of_rows)] for y in range(number_of_columns)]
 
     # calculates the specific dimensions of the individual cells
@@ -68,34 +90,38 @@ def actual_canvas(dimension):
 
     colors = "#000000"
     
-    def erase_screen(screen, grid, basic_x, basic_y):
+
+    def erase_canvas(screen, grid, basic_x, basic_y):
         for i in range(number_of_columns):
             for j in range(number_of_rows):
                 if grid[i][j]:
                     pygame.draw.rect(screen, (255, 255, 255), (j * basic_x,
                                                          i * basic_y, basic_x, basic_y))
-                    
-    def change_color(screen, color, x_cell, y_cell, x_pos, y_pos):
-        # x_cell * x_pos gives pixel position of left edge of cell
-        # y_cell * y_pos gives pixel position of top edge of cell
-        pygame.draw.rect(screen, color, (x_cell * x_pos, y_cell * y_pos, x_pos,
-                                         y_pos))
+
+
+    def change_color(screen, color, x_in_cell, y_in_cell, x_size, y_size):
+        # x_in_cell * x_size gives pixel position of left edge of cell
+        # y_in_cell * y_size gives pixel position of top edge of cell
+        pygame.draw.rect(screen, color, (x_in_cell * x_size, y_in_cell * y_size, x_size,
+                                         y_size))
     while running:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
                 if event.key == K_e:
-                    erase_screen(screen, grid, basic_x, basic_y)
+                    erase_canvas(screen, grid, basic_x, basic_y)
                     pygame.display.flip()
                 if event.key == K_r:
                     colors = "#93032E"
                 if event.key == K_g:
-                    colors = "#81B29A"
+                    colors = "#50C878"
                 if event.key == K_b:
                     colors = "#59A5D8"
                 if event.key == K_v:
                     colors = "#000000"
+                if event.key == K_c:
+                    colors = "#FFFFFF"
             elif event.type == QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN or clicking:
@@ -103,6 +129,8 @@ def actual_canvas(dimension):
                 x, y = pygame.mouse.get_pos()
                 x_in_grid = int(x / basic_x)
                 y_in_grid = int(y/ basic_y)
+
+                # turns the 0's on the grid array to 1's to specify which cells are alive
                 grid[y_in_grid][x_in_grid] = 1
 
                 change_color(screen, colors, x_in_grid, y_in_grid, basic_x, basic_y)        
@@ -112,5 +140,4 @@ def actual_canvas(dimension):
                 clicking = 0
 
             
-
 menu()
